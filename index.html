@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+
+<!-- NÃO PERMITE ZOOM -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Chá de cozinha tainá</title>
+
+<style>
+
+/* RESET */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+
+/* FUNDO */
+html, body{
+    height:100%;
+    overflow:hidden; /* 🔒 trava qualquer rolagem */
+}
+
+body{
+    background:#000;
+    background-image:
+        linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)),
+        url("fundo.jpg/tainá\ e\ flavio.jpeg");
+    background-position:center;
+    background-repeat:no-repeat;
+    background-size:contain;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    padding:15px;
+}
+
+/* CARD VIDRO */
+.container{
+    width:100%;
+    max-width:420px;
+    padding:30px 25px;
+    border-radius:22px;
+
+    background:rgba(255,255,255,0.08);
+    backdrop-filter:blur(15px);
+    -webkit-backdrop-filter:blur(15px);
+
+    border:1px solid rgba(255,255,255,0.2);
+    box-shadow:0 15px 40px rgba(0,0,0,0.5);
+
+    text-align:center;
+    color:#fff;
+
+    animation:fadeIn 0.8s ease;
+}
+
+/* TÍTULO */
+h1{
+    margin-bottom:25px;
+    font-weight:600;
+    font-size:22px;
+    color:#fff;
+}
+
+/* INPUTS */
+input{
+    width:100%;
+    padding:14px;
+    margin-bottom:15px;
+    border-radius:12px;
+    border:none;
+    font-size:16px;
+    outline:none;
+
+    background:rgba(255,255,255,0.15);
+    color:#fff;
+}
+
+input::placeholder{
+    color:rgba(255,255,255,0.7);
+}
+
+/* BOTÃO */
+button{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:14px;
+    font-size:17px;
+    font-weight:600;
+    cursor:pointer;
+
+    background:linear-gradient(45deg,#ff5c75,#ff3b5c);
+    color:#fff;
+
+    transition:0.3s;
+}
+
+button:hover{
+    transform:scale(1.05);
+    box-shadow:0 10px 25px rgba(255,59,92,0.5);
+}
+
+/* CONTAGEM */
+.contagem{
+    font-size:55px;
+    font-weight:bold;
+    margin-top:20px;
+    color:#ff5c75;
+    animation:zoom 0.6s ease;
+}
+
+/* RESULTADO */
+.resultado{
+    margin-top:20px;
+    font-size:18px;
+    font-weight:500;
+    line-height:1.4;
+}
+
+/* TOAST */
+.toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:#333;
+    color:#fff;
+    padding:14px 20px;
+    border-radius:12px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.4);
+    opacity:0;
+    transition:0.4s;
+    width:90%;
+    max-width:350px;
+    text-align:center;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+}
+
+/* ANIMAÇÕES */
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(20px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+@keyframes zoom{
+    from{transform:scale(0);}
+    to{transform:scale(1);}
+}
+
+/* RESPONSIVO EXTRA */
+@media(max-width:480px){
+    .container{
+        padding:25px 20px;
+    }
+
+    h1{
+        font-size:20px;
+    }
+
+    .contagem{
+        font-size:45px;
+    }
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>🎁Chá de cozinha Tainá</h1>
+
+<input type="text" id="nome" placeholder="Seu Nome">
+<input type="email" id="email" placeholder="Seu Email">
+
+<button onclick="sortearNumero()">🎲 Sortear Número</button>
+
+<div class="contagem" id="contagem"></div>
+<div class="resultado" id="resultado"></div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+let dados = JSON.parse(localStorage.getItem("sorteioAuto")) || {};
+
+function mostrarToast(mensagem, cor="#333"){
+    const toast = document.getElementById("toast");
+    toast.innerText = mensagem;
+    toast.style.background = cor;
+    toast.classList.add("show");
+
+    setTimeout(()=>{
+        toast.classList.remove("show");
+    },4000);
+}
+
+function sleep(ms){
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function sortearNumero(){
+
+    let nome = document.getElementById("nome").value.trim();
+    let email = document.getElementById("email").value.trim();
+    let resultado = document.getElementById("resultado");
+    let contagem = document.getElementById("contagem");
+
+    resultado.innerHTML="";
+    contagem.innerHTML="";
+
+    if(!nome || !email){
+        mostrarToast("⚠ Preencha nome e email!", "#e74c3c");
+        return;
+    }
+
+    for(let numero in dados){
+        if(dados[numero].email === email){
+            mostrarToast("❌ Esse email já participou!", "#e74c3c");
+            return;
+        }
+    }
+
+    let disponiveis=[];
+    for(let i=1;i<=40;i++){
+        if(!dados[i]){
+            disponiveis.push(i);
+        }
+    }
+
+    if(disponiveis.length===0){
+        mostrarToast("⚠ Todos os números já foram sorteados!", "#e74c3c");
+        return;
+    }
+
+    /* CONTAGEM 3 2 1 */
+    for(let i=3;i>=1;i--){
+        contagem.innerHTML=i;
+        await sleep(800);
+    }
+
+    contagem.innerHTML="🎉";
+    await sleep(600);
+    contagem.innerHTML="";
+
+    let numeroSorteado = disponiveis[Math.floor(Math.random()*disponiveis.length)];
+
+    dados[numeroSorteado]={nome,email};
+    localStorage.setItem("sorteioAuto", JSON.stringify(dados));
+
+    resultado.innerHTML=`🎉 Parabéns ${nome}!<br>Seu número é <span style="color:#ff5c75;font-size:22px;font-weight:bold;">${numeroSorteado}</span>`;
+
+    mostrarToast("✅ Número sorteado com sucesso!", "#27ae60");
+
+    await fetch("enviar.php",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({nome,email,numero:numeroSorteado})
+    });
+}
+
+</script>
+
+</body>
+</html>
